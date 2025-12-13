@@ -22,9 +22,11 @@
 
     $conn->close();
 
+    //================ ฟังก์ชันดึงข้อมูล ===========================
+
     function select_user($conn) {
 
-        $sql = "SELECT user_id, user_name, user_address, user_phone FROM users ORDER BY user_id DESC";
+        $sql = "SELECT * FROM users ORDER BY user_id DESC";//ดึงจากตาราง
         $result = $conn->query($sql);
 
         $users = [];
@@ -38,22 +40,27 @@
         ]);
     }
 
+    //================== ฟังก์ชันเพิ่มข้อมูล ===========================
+
     function insert_user($conn) {
+        //บันทึกข้อมูล
         $sql = "INSERT INTO users (user_name, user_address, user_phone)
-                VALUES (?, ?, ?)";
+                VALUES (?, ?, ?)";//เปลี่ยนตามจำนวน
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "sss",
-            $_POST['user_name'],
-            $_POST['user_address'],
-            $_POST['user_phone']
+            "sss",//เปลี่ยนตามจำนวน
+            $_POST['user_name'],//ค่า user_name ที่ส่งมา
+            $_POST['user_address'],//ค่า user_address ที่ส่งมา
+            $_POST['user_phone']//ค่า user_phone ที่ส่งมา
         );
 
         $stmt->execute();
 
         echo json_encode(["status" => "success"]);
     }
+
+    //=================== ฟังก์ชันแก้ไขข้อมูล ==========================
 
     function update_user($conn) {
         $sql = "UPDATE users 
@@ -63,10 +70,10 @@
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "sssi",
-            $_POST['user_name'],
-            $_POST['user_address'],
-            $_POST['user_phone'],
-            $_POST['user_id']
+            $_POST['user_name'],//ค่า user_name ที่ส่งมา
+            $_POST['user_address'],//ค่า user_address ที่ส่งมา
+            $_POST['user_phone'],//ค่า user_phone ที่ส่งมา
+            $_POST['user_id']//ค่า user_id ที่ส่งมา
         );
 
         $stmt->execute();
@@ -74,6 +81,7 @@
         echo json_encode(["status" => "success"]);
     }
 
+    //================== ฟังก์ชันดึง user มาแก้ไข ==================
     function get_user($conn) {
         $sql = "SELECT * FROM users WHERE user_id=?";
         $stmt = $conn->prepare($sql);
@@ -87,10 +95,12 @@
         ]);
     }
 
+    //=================== ฟังก์ชันลบข้อมูล =============================
+
     function delete_user($conn) {
-        $sql = "DELETE FROM users WHERE user_id=?";
+        $sql = "DELETE FROM users WHERE user_id=?";//ลบในตาราง users
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $_POST['user_id']);
+        $stmt->bind_param("i", $_POST['user_id']);//ลบในตาราง user_id ที่ส่งมา
 
         if ($stmt->execute()) {
             echo json_encode([
