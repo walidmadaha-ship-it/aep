@@ -1,96 +1,116 @@
 $(document).ready(function () {
-    var user_id = 3;
-    var editingRow = null;
-    var mode = "add"; // add หรือ edit
+    select_user();
+    function select_user() {
+        var html ="";
+        $.ajax({
+            type: "post",
+            url: "pages/user/action.php",
+            data: {
+                fn: "select_user"
+            },
+            dataType: "json",
+            success: function (response) {
+                let index = 1;
+                $.each(response.data, function (i, user) {
+                    html += `
+                        <tr>
+                            <td>${index++}</td>
+                            <td>${user.user_name}</td>
+                            <td>${user.user_address}</td>
+                            <td>${user.user_phone}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning edit" data-id="${user.user_id}">แก้ไข</button>
+                                <button class="btn btn-sm btn-danger delete" data-id="${user.user_id}">ลบ</button>
+                            </td>
+                        </tr>
+                    `;
+                });
 
-    // ===== เปิด Modal เพื่อเพิ่ม =====
-    $('#openAddModal').click(function () {
-        mode = "add";
-        editingRow = null;
+                $("#tbody_user").html(html);
+            }
 
-        // ล้างค่า input
-        $('#user_name').val('');
-        $('#user_address').val('');
-        $('#user_phone').val('');
+        });
+    }
 
-        // เปลี่ยน title และปุ่ม
-        $('.modal-title').text('เพิ่มผู้ใช้น้ำ');
-        $('#insert').text('เพิ่ม').removeClass('btn-primary').addClass('btn-success');
+    $("#btnAdd").click(function () {
+        $("#user_id").val("");
+        $("#user_name").val("");
+        $("#user_address").val("");
+        $("#user_phone").val("");
 
-        $('#addUserModal').modal('show');
+        $("#userModal").modal("show");
     });
 
-    // ===== กดปุ่มใน modal (เพิ่มหรือแก้ไข) =====
-    $('#insert').click(function (e) {
-        e.preventDefault();
+    $(document).on("click", ".edit", function () {
+        let id = $(this).data("id");
 
-        var name = $('#user_name').val();
-        var address = $('#user_address').val();
-        var phone = $('#user_phone').val();
+        $.ajax({
+            type: "post",
+            url: "pages/user/action.php",
+            data: {
+                fn: "get_user",
+                user_id: id
+            },
+            dataType: "json",
+            success: function (res) {
+                $("#user_id").val(res.data.user_id);
+                $("#user_name").val(res.data.user_name);
+                $("#user_address").val(res.data.user_address);
+                $("#user_phone").val(res.data.user_phone);
 
-        if (name == '' || address == '' || phone == '') {
-            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-            return;
-        }
-
-        if (mode === "add") {
-            // ------- เพิ่มข้อมูล -------
-            user_id++;
-
-            var row = `
-                <tr>
-                    <td>${user_id}</td>
-                    <td>${name}</td>
-                    <td>${address}</td>
-                    <td>${phone}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning edit">แก้ไข</button>
-                        <button class="btn btn-sm btn-danger delete">ลบ</button>
-                    </td>
-                </tr>
-            `;
-
-            $('tbody').append(row);
-            alert("เพิ่มผู้ใช้น้ำสำเร็จ");
-
-        } else if (mode === "edit") {
-            // ------- อัปเดตข้อมูล -------
-            editingRow.find('td:eq(1)').text(name);
-            editingRow.find('td:eq(2)').text(address);
-            editingRow.find('td:eq(3)').text(phone);
-
-            alert("แก้ไขข้อมูลสำเร็จ");
-        }
-
-        $('#addUserModal').modal('hide');
+                $("#userModal").modal("show");
+            }
+        });
     });
 
-    // ===== ปุ่มลบ =====
-    $(document).on('click', '.delete', function () {
-        if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่ ?")) {
-            $(this).closest('tr').remove();
-        }
+    $("#btnSave").click(function () {
+
+        let user_id = $("#user_id").val();
+        let fn = user_id ? "update_user" : "insert_user";
+
+        $.ajax({
+            type: "post",
+            url: "pages/user/action.php",
+            data: {
+                fn: fn,
+                user_id: user_id,
+                user_name: $("#user_name").val(),
+                user_address: $("#user_address").val(),
+                user_phone: $("#user_phone").val()
+            },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === "success") {
+                    $("#userModal").modal("hide");
+                    select_user();
+                } else {
+                    alert(res.message);
+                }
+            }
+        });
     });
 
-    // ===== ปุ่มแก้ไข =====
-    $(document).on('click', '.edit', function () {
-        mode = "edit";
-        editingRow = $(this).closest('tr');
+    $(document).on("click", ".delete", function () {
+        let id = $(this).data("id");
 
-        var name = editingRow.find('td:eq(1)').text();
-        var address = editingRow.find('td:eq(2)').text();
-        var phone = editingRow.find('td:eq(3)').text();
+        if (!confirm("ยืนยันการลบข้อมูล ?")) return;
 
-        // ใส่ข้อมูลลง modal
-        $('#user_name').val(name);
-        $('#user_address').val(address);
-        $('#user_phone').val(phone);
-
-        // เปลี่ยน title และปุ่ม
-        $('.modal-title').text('แก้ไขผู้ใช้น้ำ');
-        $('#insert').text('บันทึก').removeClass('btn-success').addClass('btn-primary');
-
-        $('#addUserModal').modal('show');
+        $.ajax({
+            type: "post",
+            url: "pages/user/action.php",
+            data: {
+                fn: "delete_user",
+                user_id: id
+            },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === "success") {
+                    select_user();
+                } else {
+                    alert(res.message);
+                }
+            }
+        });
     });
-
+    
 });
