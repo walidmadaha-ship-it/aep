@@ -1,6 +1,8 @@
 <?php
-    $page = (!isset($_GET["page"])) ? 'home' : $_GET["page"] ;
+session_start();
+    $page = (!isset($_GET["page"])) ? 'home' : $_GET["page"];
 ?>
+
 <!DOCTYPE html>
 <html lang="th">
 

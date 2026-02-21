@@ -1,7 +1,12 @@
 <?php
-header("Content-Type: application/json");
+// config.php
 
-// เชื่อมต่อฐานข้อมูล
-$conn = new mysqli("localhost", "root", "", "plumbing");
+$conn = new mysqli(hostname: "localhost", username: "root", password: "", database: "aep1");
 
-$conn->set_charset("utf8");
+// ตรวจสอบการเชื่อมต่อ
+if ($conn->connect_error) {
+    die("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
+}
+
+// ตั้งค่า charset
+$conn->set_charset(charset: "utf8mb4");
